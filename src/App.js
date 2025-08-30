@@ -46,6 +46,7 @@ export default function App() {
     }, 50);
   }
 
+  
   function handleSend() {
     if (!value.trim()) return;
     const userMsg = { role: "user", text: value };
@@ -54,7 +55,7 @@ export default function App() {
     scrollToBottom();
 
     // Simulate assistant typing effect (character by character)
-    const fullReply = `You said: "${userMsg.text}" 🤖`;
+    const fullReply = `You said: "${userMsg.text}" `; //🤖
     let currentText = "";
     let index = 0;
 
