@@ -62,16 +62,19 @@ body { font-family: ui-sans-serif, system-ui, Arial, Helvetica, sans-serif; back
   border-radius: 16px;
   font-size: 16px;
   line-height: 1.4;
+  white-space: pre-line;
 }
 
 .message.user {
   align-self: flex-end;
   background: #d1e8ff;
+  white-space: pre-line;
 }
 
 .message.assistant {
   align-self: flex-start;
   background: #f1f1f1;
+  white-space: pre-line;
 }
 
 /* Input bar */

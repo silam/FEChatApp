@@ -41,6 +41,7 @@
   margin-left: 2px;
   opacity: 1;
   animation: blink 1s steps(2, start) infinite;
+  
 }
 
 @keyframes blink {

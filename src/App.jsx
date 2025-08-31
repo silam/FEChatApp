@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './styles.css';
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 function IconPlus() {
   return (
@@ -29,6 +29,10 @@ function IconArrowUp() {
   );
 }
 
+const API_BASE = 'http://localhost:8000'
+
+ 
+
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [value, setValue] = useState("");
@@ -36,6 +40,52 @@ export default function App() {
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [answer, setAnswer] = useState('')
+
+ 
+
+  useEffect(() => {
+      const fullReply = answer
+      
+      
+      ///////////////////////////
+      // set interval here
+      ////////////////////////////
+      let currentText = "";
+      let index = 0;
+      const interval = setInterval(() => {
+        if ( fullReply !== undefined && fullReply !== '' && fullReply !== null)
+        {
+
+          currentText += fullReply[index];
+          index++;
+          setMessages((prev) => {
+            const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
+            return [
+              ...withoutTyping,
+              { role: "assistant-typing", text: currentText },
+            ];
+          });
+
+          scrollToBottom();
+
+          if (index === fullReply.length) {
+            clearInterval(interval);
+            setTyping(false);
+
+            setMessages((prev) => {
+              const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
+              return [...withoutTyping, { role: "assistant", text: currentText }];
+            });
+            scrollToBottom();
+          }
+        }
+        
+      }, 40); // speed (ms per character)
+
+
+    }, [answer]);
+
 
   function scrollToBottom() {
     setTimeout(() => {
@@ -46,46 +96,51 @@ export default function App() {
     }, 50);
   }
 
-  
-  function handleSend() {
+ 
+  const doChat = async (question) => {
+    //setBusy(true)
+    try {
+      const res = await fetch(`${API_BASE}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json()
+      setAnswer(data.answer)
+
+    } catch (e) {
+      setAnswer(`Error: ${e?.message || e}`)
+      
+    } finally {
+      //setBusy(false)
+    }
+  }
+
+  const handleSend = async() => {
     if (!value.trim()) return;
+
+    
     const userMsg = { role: "user", text: value };
+    
     setMessages((prev) => [...prev, userMsg]);
+    // call chat API
+    await doChat(value)
+
+
     setValue("");
+    
     scrollToBottom();
+    console.log('answer= ' + answer)
 
     // Simulate assistant typing effect (character by character)
-    const fullReply = `You said: "${userMsg.text}" `; //🤖
-    let currentText = "";
-    let index = 0;
-
+    const fullReply = answer; //`You said: "${userMsg.text}" `; //🤖
+    console.log('fullReply= ' + fullReply)
+    
     setTyping(true);
 
-    const interval = setInterval(() => {
-      currentText += fullReply[index];
-      index++;
 
-      setMessages((prev) => {
-        const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
-        return [
-          ...withoutTyping,
-          { role: "assistant-typing", text: currentText },
-        ];
-      });
-
-      scrollToBottom();
-
-      if (index === fullReply.length) {
-        clearInterval(interval);
-        setTyping(false);
-
-        setMessages((prev) => {
-          const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
-          return [...withoutTyping, { role: "assistant", text: currentText }];
-        });
-        scrollToBottom();
-      }
-    }, 40); // speed (ms per character)
+    
   }
 
   function handleKeyDown(e) {
@@ -99,14 +154,14 @@ export default function App() {
     <div className="page">
       {/* Chat History */}
       <div className="chat-history" ref={scrollRef}>
-        {messages.map((msg, i) => (
+        {messages.length !== 0 && messages.map((msg, i) => (
           <div
             key={i}
             className={`message ${
               msg.role.startsWith("assistant") ? "assistant" : "user"
             }`}
           >
-            {msg.text}
+            {msg !== 'undefined' && msg.text}
           </div>
         ))}
       </div>
