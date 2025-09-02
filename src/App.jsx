@@ -30,7 +30,7 @@ function IconArrowUp() {
 }
 
 const API_BASE = 'http://localhost:8000'
-
+const IMAGE_DOMAIN = 'https://embed.widencdn.net/'
  
 
 export default function App() {
@@ -41,13 +41,52 @@ export default function App() {
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
   const [answer, setAnswer] = useState('')
+  const [images, setImages]       = useState([])
+  const [recordIds, setRecordIds]       = useState([])
 
- 
+
+  useEffect( ()=> {
+    async function fetchImages() {
+
+      for (let i =0; i < recordIds.length; i++)
+      {
+        try {
+        const res = await fetch(`${API_BASE}/id?recordid=${recordIds[i]}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+          
+        })
+        // if (!res.ok) throw new Error(await res.text())
+        const data = await res.json()
+        //setImages(data.answer)
+        setImages([
+          ...images,data.imagepath[0]
+        ]);
+
+        console.log("fetch images = " + data.imagepath[0])
+
+        
+        } catch (e) {
+         // setAnswer(`Error: ${e?.message || e}`)
+          
+        } finally {
+          //setBusy(false)
+        }
+      }
+
+    };
+
+    fetchImages();
+
+    
+  },[recordIds]);
 
   useEffect(() => {
       const fullReply = answer
+      const regex = /\[(\d+)-\d+\]/g;
+
       
-      
+      // Sources: [214-0], [4718-0], [183-0], [4717-0]
       ///////////////////////////
       // set interval here
       ////////////////////////////
@@ -78,11 +117,19 @@ export default function App() {
               return [...withoutTyping, { role: "assistant", text: currentText }];
             });
             scrollToBottom();
+
+
+            const recordIds = [...fullReply.matchAll(regex)].map(m => m[0]);
+            setRecordIds(recordIds)
+            console.log(recordIds); 
+
           }
+
+          
         }
         
       }, 40); // speed (ms per character)
-
+      
 
     }, [answer]);
 
@@ -124,6 +171,7 @@ export default function App() {
     const userMsg = { role: "user", text: value };
     
     setMessages((prev) => [...prev, userMsg]);
+    scrollToBottom();
     // call chat API
     await doChat(value)
 
@@ -131,11 +179,9 @@ export default function App() {
     setValue("");
     
     scrollToBottom();
-    console.log('answer= ' + answer)
 
     // Simulate assistant typing effect (character by character)
     const fullReply = answer; //`You said: "${userMsg.text}" `; //🤖
-    console.log('fullReply= ' + fullReply)
     
     setTyping(true);
 
@@ -164,6 +210,17 @@ export default function App() {
             {msg !== 'undefined' && msg.text}
           </div>
         ))}
+
+        {
+          images.length !== 0 && images.map((m,i)=>(
+            <div key ={i} 
+            className="message assistant"
+            >
+                <img src={`${IMAGE_DOMAIN}${m}`} alt="Boot" height={150} width={150} />
+                
+            </div>
+          ))      
+        }
       </div>
 
       {/* Input Bar */}
