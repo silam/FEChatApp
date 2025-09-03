@@ -44,7 +44,17 @@ export default function App() {
   const [images, setImages]       = useState([])
   const [recordIds, setRecordIds]       = useState([])
 
+  // array of metadata of array of product ID
+  const [metadata, setMetadata]       = useState([]) 
+  const [arrHistMetadata, setarrHistMetadata] = useState([[]])
 
+  // array of history of metadata of array of productID
+//   const arrayHistMetadata = [
+//   [1, 2, 3],
+//   [4, 5, 6],
+//   [7, 8, 9]
+// ];
+  
   useEffect( ()=> {
     async function fetchImages() {
 
@@ -85,6 +95,10 @@ export default function App() {
       const fullReply = answer
       const regex = /\[(\d+)-\d+\]/g;
 
+      const metadataparsed = JSON.stringify(metadata[0]);
+
+      console.log(metadataparsed)
+      console.log(metadata[0])
       
       // Sources: [214-0], [4718-0], [183-0], [4717-0]
       ///////////////////////////
@@ -112,9 +126,16 @@ export default function App() {
             clearInterval(interval);
             setTyping(false);
 
+            if ( currentText.toLowerCase().includes("don't know"))
+            {
+                setMetadata([])
+                
+            }
+             
+
             setMessages((prev) => {
               const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
-              return [...withoutTyping, { role: "assistant", text: currentText }];
+              return [...withoutTyping, { role: "assistant", text: currentText }, {role: "assistant", metadata: metadata}];
             });
             scrollToBottom();
 
@@ -128,7 +149,7 @@ export default function App() {
           
         }
         
-      }, 40); // speed (ms per character)
+      }, 4); // speed (ms per character)
       
 
     }, [answer]);
@@ -156,6 +177,11 @@ export default function App() {
       const data = await res.json()
       setAnswer(data.answer)
 
+      if ( data.answer.includes("I don't know") === true)
+        setMetadata([])
+      else
+        setMetadata(data.metadata)
+
     } catch (e) {
       setAnswer(`Error: ${e?.message || e}`)
       
@@ -181,7 +207,7 @@ export default function App() {
     scrollToBottom();
 
     // Simulate assistant typing effect (character by character)
-    const fullReply = answer; //`You said: "${userMsg.text}" `; //🤖
+    const fullReply = answer; 
     
     setTyping(true);
 
@@ -198,8 +224,13 @@ export default function App() {
 
   return (
     <div className="page">
+        
+
       {/* Chat History */}
       <div className="chat-history" ref={scrollRef}>
+
+          
+
         {messages.length !== 0 && messages.map((msg, i) => (
           <div
             key={i}
@@ -207,20 +238,39 @@ export default function App() {
               msg.role.startsWith("assistant") ? "assistant" : "user"
             }`}
           >
-            {msg !== 'undefined' && msg.text}
+            <div>
+              {msg !== 'undefined' && msg.text}
+
+              
+            </div>
+            {
+                  msg.role.startsWith("assistant") &&
+                  <div className="message assistant imagepath">
+                            {
+                              msg.role.startsWith("assistant") 
+                              
+                              && msg.metadata !== null 
+                              && msg.metadata !== undefined 
+                              && msg.metadata.map((m,i)=>(
+
+                              <div key ={i} 
+                              className="message assistant"
+                              >
+                                  <img className="thumbnail" src={`${IMAGE_DOMAIN}${m["image-path"][0]}`} alt="Boot" height={250} width={250} />
+                                  <div><label>Product ID: {m["product-id"]}</label> </div>
+                                  <div><label>{m["short-description"]}</label></div>
+                              </div>
+                            ))      
+                          } 
+                    </div>
+                }
+            
+            
           </div>
         ))}
 
-        {
-          images.length !== 0 && images.map((m,i)=>(
-            <div key ={i} 
-            className="message assistant"
-            >
-                <img src={`${IMAGE_DOMAIN}${m}`} alt="Boot" height={150} width={150} />
-                
-            </div>
-          ))      
-        }
+        
+        
       </div>
 
       {/* Input Bar */}
