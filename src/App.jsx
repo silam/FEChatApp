@@ -43,7 +43,7 @@ export default function App() {
   const [answer, setAnswer] = useState('')
   const [images, setImages]       = useState([])
   const [recordIds, setRecordIds]       = useState([])
-
+  const [loading, setLoading]       = useState(false)
   // array of metadata of array of product ID
   const [metadata, setMetadata]       = useState([]) 
   const [arrHistMetadata, setarrHistMetadata] = useState([[]])
@@ -93,6 +93,11 @@ export default function App() {
 
   useEffect(() => {
       const fullReply = answer
+
+      if ( answer != null && answer !== undefined && answer !== '')
+      {
+        messages.map((m) => m.loading = false)
+      }
       const regex = /\[(\d+)-\d+\]/g;
 
       const metadataparsed = JSON.stringify(metadata[0]);
@@ -168,6 +173,13 @@ export default function App() {
   const doChat = async (question) => {
     //setBusy(true)
     try {
+
+      setMessages((prev) => {
+              const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
+              return [...withoutTyping, { role: "assistant", loading: true }];
+            });
+          
+
       const res = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -228,9 +240,6 @@ export default function App() {
 
       {/* Chat History */}
       <div className="chat-history" ref={scrollRef}>
-
-          
-
         {messages.length !== 0 && messages.map((msg, i) => (
           <div
             key={i}
@@ -239,9 +248,21 @@ export default function App() {
             }`}
           >
             <div>
+              {msg !== 'undefined' && msg.loading === true &&
+              <div className={`${
+                  msg.loading === true ? "loading-visible" : "loading-hidden"
+              }`}>
+                <div class="thinking">
+                    Thinking
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>  
+              </div>  
+              }
+            </div>
+            <div>
               {msg !== 'undefined' && msg.text}
-
-              
             </div>
             {
                   msg.role.startsWith("assistant") &&
