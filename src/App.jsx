@@ -92,6 +92,7 @@ export default function App() {
   },[recordIds]);
 
   useEffect(() => {
+
       const fullReply = answer
 
       if ( answer != null && answer !== undefined && answer !== '')
@@ -131,13 +132,13 @@ export default function App() {
             clearInterval(interval);
             setTyping(false);
 
-            if ( currentText.toLowerCase().includes("don't know"))
+            if ( currentText.toLowerCase().includes("don't know") === true||
+                 currentText.toLowerCase().includes("inappropriate") === true ||
+                 currentText.toLowerCase().includes("error") === true)
             {
                 setMetadata([])
-                
+                currentText = currentText.split('-')[1].replaceAll('"','')
             }
-             
-
             setMessages((prev) => {
               const withoutTyping = prev.filter((m) => m.role !== "assistant-typing");
               return [...withoutTyping, { role: "assistant", text: currentText }, {role: "assistant", metadata: metadata}];
@@ -187,15 +188,33 @@ export default function App() {
       })
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()
-      setAnswer(data.answer)
-
-      if ( data.answer.includes("I don't know") === true)
+      const answer = data.answer
+      console.log(answer)
+      if ( JSON.stringify(answer).includes("I don't know") ||
+           JSON.stringify(answer).includes("Inappropriate")||
+           JSON.stringify(answer).includes("Error"))
+      {
+        setAnswer([])
         setMetadata([])
-      else
+        //throw new Error(JSON.stringify(answer))
+        const now = new Date();
+
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+
+        setAnswer(seconds + '-' + JSON.stringify(answer.error))
+      }
+      else {
         setMetadata(data.metadata)
+        let pattern = '/Sources:\s*(\[\d+-\d+\](,\s*)?)+/'
+        console.log(answer)
+        // string.replace(regex, replacement)
+        let cleanedText = answer.replace(/Sources:\s*(\[\d+-\d+\](,\s*)?)+/, "").trim();
+        setAnswer(cleanedText)
+      }
+        
 
     } catch (e) {
-      setAnswer(`Error: ${e?.message || e}`)
+      setAnswer(`Error: ${e?.error || e}`)
       
     } finally {
       //setBusy(false)
@@ -252,11 +271,11 @@ export default function App() {
               <div className={`${
                   msg.loading === true ? "loading-visible" : "loading-hidden"
               }`}>
-                <div class="thinking">
+                <div className="thinking">
                     Thinking
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                    <div className="dot"></div>
                   </div>  
               </div>  
               }
