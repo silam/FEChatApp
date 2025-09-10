@@ -1,0 +1,78 @@
+/* Sidebar.css */
+.sidebar {
+  height: 100vh;
+  width: 250px;
+  background: #202123;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s;
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.toggle-btn {
+  position: absolute;
+  top: 10px;
+  right: -35px;
+  background: #444;
+  color: white;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 15px;
+}
+
+.new-chat-btn {
+  background: #343541;
+  border: none;
+  padding: 10px;
+  color: white;
+  cursor: pointer;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-item {
+  padding: 10px;
+  background: #2a2b32;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.chat-item:hover {
+  background: #3a3b45;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-btn,
+.profile-btn {
+  background: #343541;
+  border: none;
+  padding: 10px;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
